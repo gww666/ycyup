@@ -1,6 +1,6 @@
 const KoaRouter = require("koa-router");
 const {getUserInfo} = require("../db/model");
-import {SucModel, ErrModel} from "../util/resModel";
+const {SucModel, ErrModel} = require("../util/resModel");
 const router = new KoaRouter({
     prefix: "/api"
 });
