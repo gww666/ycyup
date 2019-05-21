@@ -9,6 +9,7 @@ router.post("/login", async (ctx, next) => {
         let userInfo = await getUserInfo(ctx);
         ctx.body = new SucModel(userInfo, "success");
     } catch (err) {
+        console.log("err", err);
         ctx.body = new ErrModel([], "获取用户信息失败——" + JSON.stringify(err));
     }
 });

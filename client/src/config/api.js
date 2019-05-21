@@ -5,11 +5,12 @@ import {message} from "ant-design-vue";
 export const LOGIN = "/api/login";
 
 
-export const mAxios = (options = {
-    method: "post"
-}) => {
-    let _options = {...options};
-    return axios(_options);
+export const mAxios = (options = {}) => {
+    // let _options = {
+    //     method: "post",
+    //     ...options
+    // };
+    return axios(options);
 }
 
 export const handleData = (data) => {

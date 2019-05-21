@@ -18,9 +18,10 @@ export default new Vuex.Store({
     actions: {
         async login({commit}, params) {
             let data = await axios({
-                url: "https://www.xswl.ltd:3343" + LOGIN,
-                // url: LOGIN,
-                params
+                // url: "http://120.78.221.14:3343" + LOGIN,
+                url: LOGIN,
+                data: params,
+                method: "post"
             });
             data = handleData(data);
             commit("setUserInfo", data[0]);
