@@ -1,30 +1,75 @@
 import Vuex from "vuex";
 import Vue from "vue";
+import {formatDate} from "../util";
 import {
     mAxios as axios,
     handleData,
-    LOGIN
+    LOGIN,
+    AUTO_LOGIN,
+    TODO,
+    TODO_LIST
 } from "../config/api";
 Vue.use(Vuex);
 export default new Vuex.Store({
     state: {
-        userInfo: null
+        userInfo: null,
+        todoList: []
+    },
+    getters: {
+        todoListTrans: state => {
+            return state.todoList.map(item => {
+                return {
+                    ...item,
+                    createDate: formatDate(item.createDate),
+                    endDate: formatDate(item.endDate),
+                }
+            });
+        }
     },
     mutations: {
         setUserInfo(state, info) {
             state.userInfo = info;
+        },
+        setTodoList(state, list) {
+            state.todoList = list;
         }
     },
     actions: {
+        async autoLogin({commit}, ) {
+            let data = await axios({
+                url: AUTO_LOGIN,
+                method: "get"
+            });
+            data = handleData(data);
+            commit("setUserInfo", data.data[0]);
+            return data;
+        },
         async login({commit}, params) {
             let data = await axios({
-                // url: "http://120.78.221.14:3343" + LOGIN,
                 url: LOGIN,
                 data: params,
                 method: "post"
             });
             data = handleData(data);
-            commit("setUserInfo", data[0]);
+            commit("setUserInfo", data.data[0]);
+            return data;
+        },
+        async todo({commit}, params) {
+            let data = await axios({
+                url: TODO,
+                data: params,
+                method: "post"
+            });
+            data = handleData(data);
+        },
+        //查询todo列表
+        async todoList({commit}, params) {
+            let data = await axios({
+                url: TODO_LIST,
+                params,
+            });
+            data = handleData(data);
+            commit("setTodoList", data.data);
         }
     }
 });

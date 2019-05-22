@@ -2,7 +2,13 @@ const Koa = require("koa");
 const {body} = require("./util");
 const apiRouter = require("./router");
 const getDB = require("./db/connect.js");
+const session = require("koa-session");
 const app = new Koa();
+//配置session
+app.keys = ["todo list key"]
+app.use(session({
+    maxAge: 1000 * 60 * 5
+}, app));
 //初始化
 app.use(async (ctx, next) => {
     //连接数据库

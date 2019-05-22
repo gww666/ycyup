@@ -1,8 +1,8 @@
 <template>
-    <div class="input-box">
+    <div class="input-box" :style="mStyle">
         <a-icon :type="icon" 
             :style="{position: 'absolute', left: '5px', top: '50%', transform: 'translateY(-50%)', color: '#666'}"/>
-        <input ref="input" :type="type" :placeholder="placeholder" @change="handelChange"/>
+        <input :style="inputStyle" ref="input" :type="type" :placeholder="placeholder" @change="handelChange"/>
     </div>
 </template>
 
@@ -25,7 +25,18 @@ export default {
             type: String,
             default: ""
         },
-        placeholder: "",
+        placeholder: {
+            type: String,
+            default: ""
+        },
+        mStyle: {
+            type: String,
+            default: ""
+        },
+        inputStyle: {
+            type: String,
+            default: ""
+        }
     },
     data() {
         return {

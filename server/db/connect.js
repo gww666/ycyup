@@ -1,13 +1,14 @@
-const mysql = require("mysql2/promise");
+const mysql = require("mysql2");
 const {db} = require("./config");
-let _db = null;
+let pool = null;
 const getDB = () => {
     return new Promise(async resolve => {
-        if (_db) {
-            resolve(_db);
+        if (pool) {
+            resolve(pool);
         } else {
-            _db = await mysql.createConnection(db);
-            resolve(_db);
+            pool = mysql.createPool(db);
+            pool = pool.promise();
+            resolve(pool);
         }
     });
 }

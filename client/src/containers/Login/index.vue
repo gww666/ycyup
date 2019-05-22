@@ -17,7 +17,7 @@
 import Form from "../../components/form";
 import Input from "../../components/form/input";
 import Vue from "vue";
-import {Button} from "ant-design-vue";
+import {Button, message} from "ant-design-vue";
 import md5 from "js-md5";
 Vue.use(Button);
 export default {
@@ -28,14 +28,29 @@ export default {
     methods: {
         async login() {
             let {account, password} = this.$refs.form.getValues();
-            console.log(account, password);
-            
-            await this.$store.dispatch("login", {
+            let res = await this.$store.dispatch("login", {
                 account,
                 password: md5(password)
             });
-            this.$router.push("/home");
+            if (res.returnCode === 1) {
+                this.$router.push("/home");
+            } else {
+                message.open({
+                    content: data.data.message,
+                    duration: 2
+                });
+            }
+        },
+        async autoLogin() {
+            //自动登录
+            let res = await this.$store.dispatch("autoLogin");
+            if (res.returnCode === 1) {
+                this.$router.push("/home");
+            }
         }
+    },
+    mounted() {
+        this.autoLogin();
     }
 }
 </script>
