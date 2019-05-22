@@ -13,14 +13,11 @@ export const mAxios = (options = {}) => {
 }
 
 export const handleData = (data) => {
-    if (data.status === 200 && data.data.returnCode === 1) {
-        return data.data;
-    } else {
+    if (data.data.returnCode === 0) {
         message.open({
             content: data.data.message,
             duration: 2
         });
-        //返回后台包装的对象{message: "", returnCode: "", data: ""}
-        return data.data;
     }
+    return data.data;
 }

@@ -31,7 +31,7 @@
                 <a-button v-else @click="onLoadMore">loading more</a-button>
             </div>
             <a-list-item slot="renderItem" slot-scope="item">
-                <a slot="actions" @click="complete">complete</a>
+                <a slot="actions" @click="complete(item)">complete</a>
                 <a slot="actions">
                     <a-dropdown>
                         <a class="ant-dropdown-link" href="#">
@@ -48,8 +48,7 @@
                     </a-dropdown>
                 </a>
                 <a-list-item-meta
-                    :description="item.content"
-                >
+                    :description="item.content">
                     <a slot="title">{{item.title}}</a>
                     <a-avatar slot="avatar" src="https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png" />
                 </a-list-item-meta>
@@ -139,8 +138,11 @@ export default {
             this.getData();
         },
         //完成
-        complete() {
-            
+        complete(item) {
+            this.$store.dispatch("todo", {
+                id: item.id,
+                state: 2
+            });
         },
         emitEmpty () {
             this.$refs.userNameInput.focus();
@@ -169,13 +171,6 @@ export default {
                 });
             } else {
                 //新增
-                console.log("参数", {
-                    title,
-                    content,
-                    createDate: Date.now(),
-                    endDate: time,
-                });
-                // return;
                 await this.$store.dispatch("todo", {
                     userId: this.userInfo.id,
                     title,
@@ -188,6 +183,9 @@ export default {
             //结束加载状态
             this.confirmLoading = false;
             this.modalVisible = false;
+
+            //重新请求列表
+            this.getData();
             
         },
         handleCancel() {
@@ -201,7 +199,7 @@ export default {
         },
     },
     mounted() {
-        this.getData();
+        this.getData({state: 1});
         
     },
     components: {
