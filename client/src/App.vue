@@ -20,4 +20,11 @@ html, body {
   height: 100%;
   width: 100%;
 }
+.list-box .ant-list-item-action {
+    display: flex;
+    align-items: center;
+}
+.list-box .ant-list-item-meta-title {
+    margin-bottom: 10px;
+}
 </style>

@@ -3,7 +3,7 @@
         <div class="header">
             <div class="filter-box">
                 <span :style="[{color: index === filterBtnIndex ? '#1890ff' : '#666'}]"
-                    @click="filter(index)"
+                    @click="filter(index, item)"
                     @selectstart="stop($event)"
                     v-for="(item, index) in filterBtn" :key="index">
                     {{item.type}}
@@ -26,39 +26,53 @@
             :loading="loading"
             itemLayout="horizontal"
             :dataSource="todoList">
+            <!-- 点击加载更多的按钮 -->
             <div v-if="showLoadingMore" slot="loadMore" :style="{ textAlign: 'center', marginTop: '12px', height: '32px', lineHeight: '32px' }">
                 <a-spin v-if="loadingMore" />
                 <a-button v-else @click="onLoadMore">loading more</a-button>
             </div>
+            <!-- 每一个列表项 -->
             <a-list-item slot="renderItem" slot-scope="item">
-                <a slot="actions" @click="complete(item)">complete</a>
+                <div slot="actions" style="display: flex; align-items: center;min-width: 60px;justify-content: center;">
+                    <a v-if="item.state === 1" @click="complete(item)">complete</a>
+                    <a-icon type="check" style="color: green;font-size: 20px;" v-else-if="item.state === 2" />
+                    <a-icon type="info-circle" style="color: orange;font-size: 20px;" v-else-if="item.state === 3" />
+                </div>
+                <!-- more下拉菜单 -->
                 <a slot="actions">
                     <a-dropdown>
                         <a class="ant-dropdown-link" href="#">
                             more<a-icon type="down" />
                         </a>
                         <a-menu slot="overlay">
-                            <a-menu-item>
-                                <a href="javascript:;">edit</a>
+                            <a-menu-item v-if="item.state === 1">
+                                <a href="javascript:;" @click="add(item)">edit</a>
                             </a-menu-item>
                             <a-menu-item>
-                                <a href="javascript:;">delete</a>
+                                <a href="javascript:;" @click="deleteItem(item)">delete</a>
                             </a-menu-item>
                         </a-menu>
                     </a-dropdown>
                 </a>
                 <a-list-item-meta
                     :description="item.content">
+                    <!-- 标题 -->
                     <a slot="title">{{item.title}}</a>
-                    <a-avatar slot="avatar" src="https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png" />
+                    <!-- 头像和昵称 -->
+                    <div slot="avatar" class="photo">
+                        <a-avatar src="https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png" />
+                        <!-- 昵称 -->
+                        <span class="nickname">{{userInfo.nickname || userInfo.account}}</span>
+                    </div>
                 </a-list-item-meta>
-                <div>
-                    <span>{{item.createDate}} / {{item.endDate}}</span>
+                <!-- 日期 -->
+                <div title="创建时间 / 完成时间">
+                    <span :style="[item.state === 3 ? {color: 'red'}: {}]">{{item.createDate}} / {{item.endDate}}</span>
                 </div>
             </a-list-item>
         </a-list>
         <a-modal
-            title="add a new todo item"
+            :title="modalTitle"
             :visible="modalVisible"
             @ok="handleOk"
             :confirmLoading="confirmLoading"
@@ -79,6 +93,7 @@
 import {List, Avatar, Dropdown, Menu, Input, Icon, Modal, DatePicker} from "ant-design-vue";
 import Form from "../../components/form";
 import MInput from "../../components/form/input";
+import {sleep} from "../../util";
 import moment from "moment";
 import Vue from "vue";
 Vue.use(List);
@@ -94,7 +109,7 @@ export default {
         return {
             loading: true,
             loadingMore: false,
-            showLoadingMore: true,
+            showLoadingMore: false,
             userName: "",
             filterBtn: [
                 {
@@ -116,7 +131,8 @@ export default {
             //todo-item要完成的时间点
             date: null,
             //正在编辑的todo-item的ID
-            editId: null
+            editId: null,
+            modalTitle: ""
         }
     },
     computed: {
@@ -138,11 +154,14 @@ export default {
             this.getData();
         },
         //完成
-        complete(item) {
-            this.$store.dispatch("todo", {
+        async complete(item) {
+            await this.$store.dispatch("todo", {
                 id: item.id,
                 state: 2
             });
+            //根据选中的筛选条件，重新请求列表数据
+            let params = this.handleFilterParams(this.filterBtn[this.filterBtnIndex].type);
+            this.getData(params);
         },
         emitEmpty () {
             this.$refs.userNameInput.focus();
@@ -151,9 +170,23 @@ export default {
         stop(event) {
             event.preventDefault();
         },
-        filter(index) {
-            
+        handleFilterParams(type) {
+            //根据选择的筛选条件，生成不同的参数
+            let params = {};
+            if (type === "completed") {
+                params.state = 2;
+            } else if (type === "activated") {
+                params.state = 1;
+            } else if (type === "self") {
+                params.userId = this.userInfo.id;
+            }
+            return params;
+        },
+        //切换筛选条件
+        filter(index, item) {
             this.filterBtnIndex = index;
+            let params = this.handleFilterParams(item.type);
+            this.getData(params);
         },
         //增加或修改一条todo-item
         async handleOk() {
@@ -184,19 +217,42 @@ export default {
             this.confirmLoading = false;
             this.modalVisible = false;
 
-            //重新请求列表
-            this.getData();
+            //根据选中的筛选条件，重新请求列表数据
+            let params = this.handleFilterParams(this.filterBtn[this.filterBtnIndex].type);
+            this.getData(params);
             
         },
         handleCancel() {
             this.modalVisible = false;
         },
-        add() {
-            //显示模态框
+        //显示模态框
+        async add(item) {
             this.modalVisible = true;
-            let date = new Date().setDate(new Date().getDate() - 5);
-            this.date = moment(date);
+            await sleep(20);
+            if (item && item.id) {
+                this.editId = item.id;
+                this.modalTitle = "edit";
+                this.date = moment(new Date(item.endDate));
+                this.$refs.form.setValues({
+                    title: item.title,
+                    content: item.content
+                });
+            } else {
+                this.editId = "";
+                this.modalTitle = "add a new todo item";
+                this.$refs.form.resetValues();
+                this.date = null;
+            }
         },
+        async deleteItem(item) {
+            await this.$store.dispatch("todo", {
+                id: item.id,
+                state: 0
+            });
+            //根据选中的筛选条件，重新请求列表数据
+            let params = this.handleFilterParams(this.filterBtn[this.filterBtnIndex].type);
+            this.getData(params);
+        }
     },
     mounted() {
         this.getData({state: 1});
@@ -247,6 +303,18 @@ export default {
         }
     }
     
+    .photo {
+        display: flex;
+        flex-flow: column nowrap;
+        align-items: center;
+        min-width: 60px;
+
+        .nickname {
+            font-size: 12px;
+            margin-top: 5px;
+        }
+    }
+
 }
 .ant-list {
     width: 100%;
@@ -256,6 +324,7 @@ export default {
     width: 100%;
     background: #e8e8e8;
 }
+
 
 
 </style>

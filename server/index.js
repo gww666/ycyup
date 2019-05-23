@@ -1,5 +1,5 @@
 const Koa = require("koa");
-const {body} = require("./util");
+const {body, allowCORS} = require("./util");
 const apiRouter = require("./router");
 const getDB = require("./db/connect.js");
 const session = require("koa-session");
@@ -21,6 +21,7 @@ app.use(async (ctx, next) => {
 })
 //注册解析post参数的中间件，后续会把post类型的参数挂载到ctx.params上
 app.use(body());
+app.use(allowCORS);
 app.use(apiRouter.routes()).use(apiRouter.allowedMethods());
 let hostname = "172.18.249.80";
 let port = "3343";

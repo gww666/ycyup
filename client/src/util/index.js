@@ -9,3 +9,10 @@ export const formatDate = (time) => {
     let minutes = date.getMinutes() > 9 ? date.getMinutes() : "0" + date.getMinutes();
     return `${year}-${month}-${day} ${hour}:${minutes}`;
 }
+
+//sleep
+export const sleep = (time) => {
+    return new Promise(resolve => {
+        setTimeout(resolve, time);
+    });
+}

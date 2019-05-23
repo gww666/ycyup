@@ -17,7 +17,7 @@ export default new Vuex.Store({
     },
     getters: {
         todoListTrans: state => {
-            return state.todoList.map(item => {
+            return state.todoList.filter(item => item.state).map(item => {
                 return {
                     ...item,
                     createDate: formatDate(item.createDate),

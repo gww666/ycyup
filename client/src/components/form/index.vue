@@ -37,13 +37,11 @@ export default {
         },
         resetValues() {
             this.$children.forEach(item => {
-                item.setValue("");
+                item.setValue && item.setValue("");
             });
         }
     },
     mounted() {
-        // console.log(this.$children);
-        
         
     }
 }

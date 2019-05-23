@@ -5,6 +5,7 @@ const {
     updateTodoItem,
     selectTodoList
 } = require("../db/model");
+const {validateUser} = require("../util");
 const {SucModel, ErrModel} = require("../util/resModel");
 const router = new KoaRouter({
     prefix: "/api"
@@ -37,7 +38,7 @@ router.post("/login", async (ctx, next) => {
     }
 });
 //todo接口
-router.post("/todo", async (ctx, next) => {
+router.post("/todo", validateUser, async (ctx, next) => {
     let {id} = ctx.params;
     try {
         if (id) {
@@ -56,9 +57,30 @@ router.post("/todo", async (ctx, next) => {
 });
 
 //查询todo-list接口
-router.get("/todoList", async (ctx, next) => {
+router.get("/todoList", validateUser, async (ctx, next) => {
     try {
         let data = await selectTodoList(ctx);
+        let {state} = ctx.query;
+        //如果有state参数，剔除逾期的
+        if (state !== undefined) {
+            data = data.filter(item => {
+                let t = Number(item.endDate);
+                let currentTime = Date.now();
+                if (currentTime <= t) {
+                    return item;
+                }
+            });
+        } else {
+            //对查询数据进行转换
+            data.forEach(item => {
+                let t = Number(item.endDate);
+                let currentTime = Date.now();
+                if (currentTime > t) {
+                    //逾期了
+                    item.state = 3;
+                }
+            });
+        }
         ctx.body = new SucModel(data, "success");
     } catch (err) {
         ctx.body = new ErrModel([], "查询todoList出错：" + JSON.stringify(err));
