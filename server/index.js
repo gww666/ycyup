@@ -2,6 +2,7 @@ const Koa = require("koa");
 const {body, allowCORS} = require("./util");
 const apiRouter = require("./router");
 const getDB = require("./db/connect.js");
+const redis = require("./db/redis");
 const session = require("koa-session");
 const app = new Koa();
 //配置session
@@ -14,6 +15,7 @@ app.use(async (ctx, next) => {
     //连接数据库
     try {
         ctx.db = await getDB();
+        ctx.redis = redis;
     } catch (err) {
         console.log("连接数据库出错：", err);
     }

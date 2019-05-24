@@ -12,7 +12,13 @@ axios.interceptors.request.use(function (config) {
     // Do something before request is sent
     return {
         ...config,
-        url: BASE_URL + config.url
+        url: BASE_URL + config.url,
+        headers: config.headers ? {
+            ...config.headers,
+            sessionId: localStorage.getItem("sessionId")
+        } : {
+            sessionId: localStorage.getItem("sessionId")
+        }
     };
 }, function (error) {
     // Do something with request error
@@ -25,6 +31,9 @@ axios.interceptors.response.use(function (response) {
 }, function (error) {
     let {response} = error;
     if (response.status === 401) {
+        message.warn("登录信息失效", 2);
+        //清除localStorage中的sessionId
+        localStorage.removeItem("sessionId");
         //跳到登录页面
         router.push("/login");
         return Promise.reject(error);
@@ -37,10 +46,7 @@ export const mAxios = (options = {}) => {
 
 export const handleData = (data) => {
     if (data.data.returnCode === 0) {
-        message.open({
-            content: data.data.message,
-            duration: 2
-        });
+        message.warn(data.data.message, 2);
     }
     return data.data;
 }

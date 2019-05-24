@@ -28,7 +28,11 @@ export default new Vuex.Store({
     },
     mutations: {
         setUserInfo(state, info) {
-            state.userInfo = info;
+            //存储到localStorage中
+            if (info) {
+                localStorage.setItem("sessionId", info.sessionId);
+                state.userInfo = info;
+            }
         },
         setTodoList(state, list) {
             state.todoList = list;

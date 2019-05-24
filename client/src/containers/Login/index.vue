@@ -34,14 +34,11 @@ export default {
             });
             if (res.returnCode === 1) {
                 this.$router.push("/home");
-            } else {
-                message.open({
-                    content: data.data.message,
-                    duration: 2
-                });
             }
         },
+        //如果存在sessionId就自动登录
         async autoLogin() {
+            if (!localStorage.getItem("sessionId")) return;
             //自动登录
             let res = await this.$store.dispatch("autoLogin");
             if (res.returnCode === 1) {

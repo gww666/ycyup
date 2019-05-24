@@ -20,7 +20,7 @@ const each = (array) => {
 const getUserInfo = async (ctx) => {
     let mysql = ctx.db;
     let {account, password} = ctx.params;
-    let sql = "select id, nickname, photo, account from user where account = ? and password = ?";
+    let sql = "select id, nickname, photo, account, role from user where account = ? and password = ?";
     let [rows] = await mysql.execute(sql, [account, password]);
     return each(rows);
 }
@@ -29,20 +29,19 @@ const getUserInfo = async (ctx) => {
 const selectTodoList = async ctx => {
     let {state, userId} = ctx.query;
     let mysql = ctx.db;
-    let sql = "";
+    let where = "";
     let p = [];
     if (state && userId) {
-        sql = "select * from list where user_id = ? and state = ? order by create_date desc";
+        where = "where user_id = ? and state = ? ";
         p = [userId, state];
     } else if (state) {
-        sql = "select * from list where state = ? order by create_date desc";
+        where = "where state = ? ";
         p = [state];
     } else if (userId) {
-        sql = "select * from list where user_id = ? order by create_date desc";
+        where = "where user_id = ? ";
         p = [userId];
-    } else {
-        sql = "select * from list order by create_date desc";
     }
+    let sql = `select list.id, title, content, user_id, state, sort, create_date, end_date, account, nickname, photo from list inner join user on list.user_id = user.id ${where}order by create_date desc`;
     let [rows] = await mysql.execute(sql, p);
     return each(rows);
 } 

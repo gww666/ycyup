@@ -60,9 +60,9 @@
                     <a slot="title">{{item.title}}</a>
                     <!-- 头像和昵称 -->
                     <div slot="avatar" class="photo">
-                        <a-avatar src="https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png" />
+                        <a-avatar :src="item.photo" />
                         <!-- 昵称 -->
-                        <span class="nickname">{{userInfo.nickname || userInfo.account}}</span>
+                        <span class="nickname">{{item.nickname || item.account}}</span>
                     </div>
                 </a-list-item-meta>
                 <!-- 日期 -->
@@ -90,7 +90,7 @@
     </div>
 </template>
 <script>
-import {List, Avatar, Dropdown, Menu, Input, Icon, Modal, DatePicker} from "ant-design-vue";
+import {List, Avatar, Dropdown, Menu, Input, Icon, Modal, DatePicker, message} from "ant-design-vue";
 import Form from "../../components/form";
 import MInput from "../../components/form/input";
 import {sleep} from "../../util";
@@ -145,6 +145,18 @@ export default {
         }
     },
     methods: {
+        clickSelfBtn(tragetId) {
+            //用户角色类型：1普通用户，6超级管理员
+            //超级管理员拥有权限
+            if (this.userInfo.role === 6) {
+                return true;
+            }
+            if (tragetId !== this.userInfo.id) {
+                message.warn("你个基佬，点你妹啊！", 2);
+                return false;
+            }
+            return true;
+        },
         //请求todoList
         async getData(params = {}) {
             await this.$store.dispatch("todoList", params);
@@ -155,6 +167,7 @@ export default {
         },
         //完成
         async complete(item) {
+            if (!this.clickSelfBtn(item.userId)) return;
             await this.$store.dispatch("todo", {
                 id: item.id,
                 state: 2
@@ -227,8 +240,10 @@ export default {
         },
         //显示模态框
         async add(item) {
+            if (item.userId && !this.clickSelfBtn(item.userId)) return;
             this.modalVisible = true;
             await sleep(20);
+            //编辑模式
             if (item && item.id) {
                 this.editId = item.id;
                 this.modalTitle = "edit";
@@ -245,6 +260,7 @@ export default {
             }
         },
         async deleteItem(item) {
+            if (!this.clickSelfBtn(item.userId)) return;
             await this.$store.dispatch("todo", {
                 id: item.id,
                 state: 0

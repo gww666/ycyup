@@ -7,15 +7,23 @@ const {
 } = require("../db/model");
 const {validateUser} = require("../util");
 const {SucModel, ErrModel} = require("../util/resModel");
+const {promisify} = require("util");
 const router = new KoaRouter({
     prefix: "/api"
 });
 
 //自动登录接口
 router.get("/autoLogin", async ctx => {
-    let userInfo = ctx.session.userInfo;
+    // console.log("headers", ctx.headers);
+    let {sessionid} = ctx.headers;
+    if (!sessionid) {
+        ctx.body = new ErrModel([], "登录信息失效");
+        return;
+    }
+    let get = promisify(ctx.redis.get).bind(ctx.redis);
+    let userInfo = await get(sessionid);
     if (userInfo) {
-        ctx.body = new SucModel([userInfo], "success");
+        ctx.body = new SucModel([JSON.parse(userInfo)], "success");
     } else {
         ctx.body = new ErrModel([], "登录信息失效");
     }
@@ -29,8 +37,11 @@ router.post("/login", async (ctx, next) => {
             ctx.body = new ErrModel([], "用户名或密码错误");
             return;
         }
-        // 存储session
-        ctx.session.userInfo = userInfo[0];
+        //存储到redis中
+        let redis = ctx.redis;
+        let sessionId = "urd" + userInfo[0].id;
+        userInfo[0].sessionId = sessionId;
+        redis.set(sessionId, JSON.stringify(userInfo[0]), "EX", 60 * 5);
         ctx.body = new SucModel(userInfo, "success");
     } catch (err) {
         console.log("err", err);
